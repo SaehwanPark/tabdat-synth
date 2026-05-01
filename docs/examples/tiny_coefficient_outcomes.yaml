@@ -1,0 +1,85 @@
+name: tiny_coefficient_outcomes
+source:
+  path: ../../tests/fixtures/de_synpuf_beneficiary_tiny.csv
+  format: csv
+n_samples: 10
+random_seed: 2026
+schema:
+  columns:
+    - name: BENE_SEX_IDENT_CD
+      data_type: categorical
+      role: feature
+      nullable: false
+      missing_value_policy: forbid
+      allowed_values: ["1", "2"]
+    - name: BENE_RACE_CD
+      data_type: categorical
+      role: feature
+      nullable: false
+      missing_value_policy: forbid
+      allowed_values: ["1", "2", "3", "5"]
+    - name: PLAN_CVRG_MOS_NUM
+      data_type: integer
+      role: feature
+      nullable: false
+      missing_value_policy: forbid
+      minimum: 0
+      maximum: 12
+    - name: eligibility_log_odds
+      data_type: float
+      role: outcome
+      nullable: false
+      missing_value_policy: forbid
+    - name: pEligible
+      data_type: float
+      role: outcome
+      nullable: false
+      missing_value_policy: forbid
+    - name: Eligible
+      data_type: integer
+      role: outcome
+      nullable: false
+      missing_value_policy: forbid
+steps:
+  - name: sex_empirical
+    kind: empirical
+    output_column: BENE_SEX_IDENT_CD
+  - name: race_empirical
+    kind: empirical
+    output_column: BENE_RACE_CD
+  - name: plan_coverage_months
+    kind: truncated_normal
+    output_column: PLAN_CVRG_MOS_NUM
+  - name: eligibility_log_odds
+    kind: coefficient_sum
+    output_column: eligibility_log_odds
+    parent_columns:
+      - BENE_SEX_IDENT_CD
+      - BENE_RACE_CD
+      - PLAN_CVRG_MOS_NUM
+    coefficient_sum:
+      intercept: -4.0
+      reference_value: "99"
+      terms:
+        - feature_name: BENE_SEX_IDENT_CD
+          value: "2"
+          coefficient: 0.9
+        - feature_name: BENE_RACE_CD
+          value: "3"
+          coefficient: 0.5
+        - feature_name: BENE_RACE_CD
+          value: "5"
+          coefficient: 1.2
+        - feature_name: PLAN_CVRG_MOS_NUM
+          coefficient: 0.35
+  - name: eligibility_probability
+    kind: sigmoid_probability
+    output_column: pEligible
+    input_column: eligibility_log_odds
+  - name: eligibility_response
+    kind: bernoulli_response
+    output_column: Eligible
+    input_column: eligibility_log_odds
+    response:
+      intercept: 0.1
+      slope: 1.1

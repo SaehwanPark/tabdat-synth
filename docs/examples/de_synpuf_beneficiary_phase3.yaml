@@ -1,0 +1,112 @@
+name: de_synpuf_beneficiary_phase3
+source:
+  path: ../../tests/fixtures/de_synpuf_beneficiary_tiny.zip
+  format: zip_csv
+  member: de_synpuf_beneficiary_tiny.csv
+n_samples: 12
+random_seed: 2026
+model_backend:
+  kind: lightgbm
+  params:
+    n_estimators: 8
+    verbosity: -1
+schema:
+  columns:
+    - name: BENE_SEX_IDENT_CD
+      data_type: categorical
+      role: feature
+      nullable: false
+      missing_value_policy: forbid
+      allowed_values: ["1", "2"]
+    - name: BENE_RACE_CD
+      data_type: categorical
+      role: feature
+      nullable: false
+      missing_value_policy: forbid
+      allowed_values: ["1", "2", "3", "5"]
+    - name: BENE_ESRD_IND
+      data_type: categorical
+      role: feature
+      nullable: false
+      missing_value_policy: forbid
+      allowed_values: ["0", "Y"]
+    - name: SP_CHF
+      data_type: categorical
+      role: feature
+      nullable: false
+      missing_value_policy: forbid
+      allowed_values: ["1", "2"]
+    - name: SP_DIABETES
+      data_type: categorical
+      role: feature
+      nullable: false
+      missing_value_policy: forbid
+      allowed_values: ["1", "2"]
+    - name: BENE_HI_CVRAGE_TOT_MONS
+      data_type: integer
+      role: feature
+      nullable: false
+      missing_value_policy: forbid
+      minimum: 0
+      maximum: 12
+    - name: BENE_SMI_CVRAGE_TOT_MONS
+      data_type: integer
+      role: feature
+      nullable: false
+      missing_value_policy: forbid
+      minimum: 0
+      maximum: 12
+    - name: BENE_HMO_CVRAGE_TOT_MONS
+      data_type: integer
+      role: feature
+      nullable: true
+      missing_value_policy: mean_impute
+      minimum: 0
+      maximum: 12
+    - name: PLAN_CVRG_MOS_NUM
+      data_type: integer
+      role: feature
+      nullable: false
+      missing_value_policy: forbid
+      minimum: 0
+      maximum: 12
+steps:
+  - name: esrd_indicator
+    kind: categorical_model
+    output_column: BENE_ESRD_IND
+    parent_columns:
+      - SP_DIABETES
+      - SP_CHF
+      - BENE_HMO_CVRAGE_TOT_MONS
+  - name: sex_empirical
+    kind: empirical
+    output_column: BENE_SEX_IDENT_CD
+  - name: race_empirical
+    kind: empirical
+    output_column: BENE_RACE_CD
+  - name: hi_coverage_months
+    kind: truncated_normal
+    output_column: BENE_HI_CVRAGE_TOT_MONS
+  - name: hmo_coverage_months
+    kind: truncated_normal
+    output_column: BENE_HMO_CVRAGE_TOT_MONS
+  - name: plan_coverage_months
+    kind: truncated_normal
+    output_column: PLAN_CVRG_MOS_NUM
+  - name: diabetes_indicator
+    kind: categorical_model
+    output_column: SP_DIABETES
+    parent_columns:
+      - BENE_SEX_IDENT_CD
+      - BENE_RACE_CD
+      - PLAN_CVRG_MOS_NUM
+  - name: chf_indicator
+    kind: categorical_model
+    output_column: SP_CHF
+    parent_columns:
+      - BENE_SEX_IDENT_CD
+      - BENE_RACE_CD
+      - BENE_HI_CVRAGE_TOT_MONS
+  - name: smi_coverage_months
+    kind: truncated_normal
+    output_column: BENE_SMI_CVRAGE_TOT_MONS
