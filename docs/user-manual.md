@@ -36,27 +36,27 @@ The package is currently Python-first. There is not yet a public CLI.
 
 ## Runtime Setup
 
-The public package is installable from GitHub with `uv` and requires Python 3.13
+The public package is installable from PyPI with `uv` and requires Python 3.12
 or newer:
 
 ```bash
-uv add "tabdat-synth @ git+https://github.com/SaehwanPark/tabdat-synth.git"
+uv add tabdat-synth
 ```
 
 For one-off environment installation:
 
 ```bash
-uv pip install "tabdat-synth @ git+https://github.com/SaehwanPark/tabdat-synth.git"
+uv pip install tabdat-synth
 ```
 
 For workflows that load local `.env` files through `resolve_va_data_dir(...)`,
 install the optional `env` extra:
 
 ```bash
-uv add "tabdat-synth[env] @ git+https://github.com/SaehwanPark/tabdat-synth.git"
+uv add "tabdat-synth[env]"
 ```
 
-The package is still alpha software. Pin to a commit or tag in downstream
+The package is still alpha software. Pin to an exact release version in downstream
 projects when reproducibility matters.
 
 From the repository root, contributors can run:

@@ -4,28 +4,28 @@ This guide is for users who want to install TabDat-Synth, run a public example, 
 
 ## Requirements
 
-- Python 3.13 or newer.
+- Python 3.12 or newer.
 - `uv` for the documented commands.
 - A POSIX-like shell for the inline examples.
 
-## Install from GitHub
+## Install from PyPI
 
 Add the package to a project:
 
 ```bash
-uv add "tabdat-synth @ git+https://github.com/SaehwanPark/tabdat-synth.git"
+uv add tabdat-synth
 ```
 
 Install into the active environment:
 
 ```bash
-uv pip install "tabdat-synth @ git+https://github.com/SaehwanPark/tabdat-synth.git"
+uv pip install tabdat-synth
 ```
 
 Install the optional environment-file extra only when a workflow needs local `.env` loading:
 
 ```bash
-uv add "tabdat-synth[env] @ git+https://github.com/SaehwanPark/tabdat-synth.git"
+uv add "tabdat-synth[env]"
 ```
 
 ## Run a minimal example

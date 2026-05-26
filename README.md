@@ -1,6 +1,6 @@
 # TabDat-Synth
 
-![banner](./tabdat-learn-banner.png)
+![banner](https://raw.githubusercontent.com/SaehwanPark/tabdat-synth/main/tabdat-learn-banner.png)
 
 TabDat-Synth is a Python package for spec-driven synthetic tabular data generation. It is intended for research, education, benchmarking, and data-science prototyping where real tabular data is sensitive, unavailable, or inconvenient to share.
 
@@ -14,11 +14,11 @@ Real tabular data often carries privacy, governance, licensing, or access constr
 
 | User group | Typical use | Relevant docs |
 | --- | --- | --- |
-| Research scientists | Simulate data for methods work, sensitivity analyses, and reproducible studies. | [Use cases](docs/use-cases.md), [concepts](docs/concepts.md) |
-| Data scientists and ML engineers | Prototype pipelines, benchmark models, and create shareable fixtures. | [Getting started](docs/getting-started.md), [user manual](docs/user-manual.md) |
-| Privacy and governance reviewers | Inspect whether generated data is too close to source records. | [Evaluation metrics](docs/evaluation-metrics.md), [concepts](docs/concepts.md) |
-| Educators and students | Build realistic classroom or workshop datasets without distributing restricted data. | [Getting started](docs/getting-started.md), [examples](docs/examples/) |
-| Healthcare data collaborators | Work with public-style examples inspired by claims-data workflows. | [Data-file notes](docs/datafiles-related/) |
+| Research scientists | Simulate data for methods work, sensitivity analyses, and reproducible studies. | [Use cases](https://github.com/SaehwanPark/tabdat-synth/blob/main/docs/use-cases.md), [concepts](https://github.com/SaehwanPark/tabdat-synth/blob/main/docs/concepts.md) |
+| Data scientists and ML engineers | Prototype pipelines, benchmark models, and create shareable fixtures. | [Getting started](https://github.com/SaehwanPark/tabdat-synth/blob/main/docs/getting-started.md), [user manual](https://github.com/SaehwanPark/tabdat-synth/blob/main/docs/user-manual.md) |
+| Privacy and governance reviewers | Inspect whether generated data is too close to source records. | [Evaluation metrics](https://github.com/SaehwanPark/tabdat-synth/blob/main/docs/evaluation-metrics.md), [concepts](https://github.com/SaehwanPark/tabdat-synth/blob/main/docs/concepts.md) |
+| Educators and students | Build realistic classroom or workshop datasets without distributing restricted data. | [Getting started](https://github.com/SaehwanPark/tabdat-synth/blob/main/docs/getting-started.md), [examples](https://github.com/SaehwanPark/tabdat-synth/tree/main/docs/examples) |
+| Healthcare data collaborators | Work with public-style examples inspired by claims-data workflows. | [Data-file notes](https://github.com/SaehwanPark/tabdat-synth/tree/main/docs/datafiles-related) |
 
 ## Features
 
@@ -44,25 +44,25 @@ The DAG controls which generated columns are available to later steps. For categ
 
 ## Installation
 
-TabDat-Synth currently requires Python 3.13 or newer and is distributed from GitHub.
+TabDat-Synth requires Python 3.12 or newer and is distributed on PyPI.
 
 ```bash
-uv add "tabdat-synth @ git+https://github.com/SaehwanPark/tabdat-synth.git"
+uv add tabdat-synth
 ```
 
 For one-off installation into an active environment:
 
 ```bash
-uv pip install "tabdat-synth @ git+https://github.com/SaehwanPark/tabdat-synth.git"
+uv pip install tabdat-synth
 ```
 
 For workflows that load local `.env` files through package helpers:
 
 ```bash
-uv add "tabdat-synth[env] @ git+https://github.com/SaehwanPark/tabdat-synth.git"
+uv add "tabdat-synth[env]"
 ```
 
-Because the package is alpha software, pin downstream projects to a commit or tag when reproducibility matters.
+Because the package is alpha software, pin downstream projects to an exact release version when reproducibility matters.
 
 ## Quick start
 
@@ -100,12 +100,12 @@ print(synthetic.shape)
 
 ## Documentation
 
-- [Getting started](docs/getting-started.md): installation, first run, and tests.
-- [Use cases](docs/use-cases.md): user groups, workflows, and appropriate boundaries.
-- [Concepts](docs/concepts.md): motivation, synthesis mechanism, fitted bundles, and limitations.
-- [User manual](docs/user-manual.md): public API, step reference, backend configuration, and bundle details.
-- [Evaluation metrics](docs/evaluation-metrics.md): fidelity metrics and disclosure-risk heuristics.
-- [Synthpop comparison](docs/synthpop-comparison.md): conceptual relationship to R's `synthpop` package.
+- [Getting started](https://github.com/SaehwanPark/tabdat-synth/blob/main/docs/getting-started.md): installation, first run, and tests.
+- [Use cases](https://github.com/SaehwanPark/tabdat-synth/blob/main/docs/use-cases.md): user groups, workflows, and appropriate boundaries.
+- [Concepts](https://github.com/SaehwanPark/tabdat-synth/blob/main/docs/concepts.md): motivation, synthesis mechanism, fitted bundles, and limitations.
+- [User manual](https://github.com/SaehwanPark/tabdat-synth/blob/main/docs/user-manual.md): public API, step reference, backend configuration, and bundle details.
+- [Evaluation metrics](https://github.com/SaehwanPark/tabdat-synth/blob/main/docs/evaluation-metrics.md): fidelity metrics and disclosure-risk heuristics.
+- [Synthpop comparison](https://github.com/SaehwanPark/tabdat-synth/blob/main/docs/synthpop-comparison.md): conceptual relationship to R's `synthpop` package.
 
 ## Acknowledgement
 
@@ -114,7 +114,7 @@ TabDat-Synth is conceptually inspired by R's `synthpop` package and the broader 
 > Nowok, B., Raab, G. M., & Dibben, C. (2016). synthpop: Bespoke creation of synthetic data in R. *Journal of statistical software*, 74, 1-26.
 
 Note that this project is a cleanroom Python implementation, not built by reverse engineering `synthpop`, nor reuse `synthpop` source code.
-See [docs/synthpop-comparison.md](docs/synthpop-comparison.md) for a full comparison.
+See [docs/synthpop-comparison.md](https://github.com/SaehwanPark/tabdat-synth/blob/main/docs/synthpop-comparison.md) for a full comparison.
 
 ## Public API
 
