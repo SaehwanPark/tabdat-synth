@@ -8,6 +8,7 @@ import polars as pl
 
 from tabdat_synth.domain.contracts import (
   BernoulliResponseSpec,
+  BinMapSpec,
   CoefficientSumSpec,
   ColumnSpec,
   DatasetSchema,
@@ -24,6 +25,7 @@ ALLOWED_MISSING_VALUE_POLICIES = {
 _SOURCE_STEP_KINDS = {"empirical", "truncated_normal", "categorical_model"}
 _FEATURE_STEP_KINDS = {"categorical_model", "coefficient_sum"}
 _INPUT_STEP_KINDS = {"sigmoid_probability", "bernoulli_response"}
+_BIN_MAP_STEP_KINDS = {"bin_map"}
 
 
 def validate_generation_spec(spec: GenerationSpec) -> None:
@@ -61,6 +63,7 @@ def validate_generation_spec(spec: GenerationSpec) -> None:
       if dependency == step.output_column:
         raise ValueError(f"step '{step.name}' cannot depend on itself")
 
+  _validate_feature_columns(spec)
   _validate_terminal_bernoulli_steps(spec)
   topologically_sort_steps(spec)
 
@@ -163,11 +166,16 @@ def _validate_step_shape(
   elif step.source_column is not None:
     raise ValueError(f"{step.kind} step '{step.name}' cannot declare source_column")
 
-  if step.kind in _INPUT_STEP_KINDS:
+  if step.kind in _INPUT_STEP_KINDS or step.kind in _BIN_MAP_STEP_KINDS:
     if step.input_column is None:
       raise ValueError(f"{step.kind} step '{step.name}' requires input_column")
   elif step.input_column is not None:
     raise ValueError(f"{step.kind} step '{step.name}' cannot declare input_column")
+
+  if step.kind == "bin_map":
+    _validate_bin_map_step(step, output_spec)
+  elif step.bin_map is not None:
+    raise ValueError(f"{step.kind} step '{step.name}' cannot declare bin_map")
 
   if step.kind == "categorical_model":
     if not step.parent_columns:
@@ -182,6 +190,11 @@ def _validate_step_shape(
     _validate_coefficient_sum_step(step, output_spec)
   elif step.parent_columns:
     raise ValueError(f"{step.kind} step '{step.name}' cannot declare parent_columns")
+
+  if step.feature_columns and step.kind != "categorical_model":
+    raise ValueError(
+      f"{step.kind} step '{step.name}' cannot declare feature_columns"
+    )
 
   if step.kind == "truncated_normal" and output_spec.data_type == "categorical":
     raise ValueError(
@@ -251,6 +264,53 @@ def _validate_response_spec(step_name: str, response: BernoulliResponseSpec) -> 
     raise ValueError(
       f"bernoulli_response step '{step_name}' requires positive response.slope"
     )
+
+
+def _validate_feature_columns(spec: GenerationSpec) -> None:
+  for step in spec.steps:
+    if not step.feature_columns:
+      continue
+    if len(set(step.feature_columns)) != len(step.feature_columns):
+      raise ValueError(f"step '{step.name}' has duplicate feature_columns")
+    ancestors = resolve_incoming_ancestor_outputs(spec, step)
+    unknown = [column for column in step.feature_columns if column not in ancestors]
+    if unknown:
+      raise ValueError(
+        f"step '{step.name}' feature_columns must already be ancestor outputs; "
+        f"unknown feature columns: {unknown}"
+      )
+
+
+def _validate_bin_map_step(step: GenerationStep, output_spec: ColumnSpec) -> None:
+  if step.source_column is not None:
+    raise ValueError(f"bin_map step '{step.name}' cannot declare source_column")
+  if step.parent_columns:
+    raise ValueError(f"bin_map step '{step.name}' cannot declare parent_columns")
+  if step.response is not None:
+    raise ValueError(f"bin_map step '{step.name}' cannot declare response")
+  if step.coefficient_sum is not None:
+    raise ValueError(f"bin_map step '{step.name}' cannot declare coefficient_sum")
+  if step.feature_columns:
+    raise ValueError(f"bin_map step '{step.name}' cannot declare feature_columns")
+  if output_spec.data_type != "categorical":
+    raise ValueError(f"bin_map step '{step.name}' requires categorical output")
+  if step.bin_map is None:
+    raise ValueError(f"bin_map step '{step.name}' requires bin_map")
+  _validate_bin_map_spec(step.name, step.bin_map)
+
+
+def _validate_bin_map_spec(step_name: str, bin_map: BinMapSpec) -> None:
+  breaks = bin_map.breaks
+  labels = bin_map.labels
+
+  if not breaks:
+    raise ValueError(f"bin_map step '{step_name}' requires at least one break")
+  if len(labels) != len(breaks) + 1:
+    raise ValueError(
+      f"bin_map step '{step_name}' requires len(labels) == len(breaks) + 1"
+    )
+  if any(right <= left for left, right in zip(breaks, breaks[1:])):
+    raise ValueError(f"bin_map step '{step_name}' requires strictly increasing breaks")
 
 
 def _validate_forbidden_specs(

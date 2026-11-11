@@ -12,6 +12,7 @@ import yaml  # type: ignore[import-untyped]
 from tabdat_synth.core.sampling import MISSING_CATEGORY_LABEL
 from tabdat_synth.domain.contracts import (
   BernoulliResponseSpec,
+  BinMapSpec,
   CoefficientSumSpec,
   CoefficientTerm,
   ColumnSpec,
@@ -294,6 +295,10 @@ def _load_generation_steps(raw_steps: object) -> tuple[GenerationStep, ...]:
         mean_shift=float(cast(Any, raw_step.get("mean_shift", 0.0))),
         coefficient_sum=_load_coefficient_sum(raw_step.get("coefficient_sum")),
         response=_load_response(raw_step.get("response")),
+        feature_columns=tuple(
+          str(column) for column in raw_step.get("feature_columns", [])
+        ),
+        bin_map=_load_bin_map(raw_step.get("bin_map")),
       )
     )
 
@@ -369,6 +374,25 @@ def _load_response(raw_response: object) -> BernoulliResponseSpec | None:
   )
 
 
+def _load_bin_map(raw_bin_map: object) -> BinMapSpec | None:
+  if raw_bin_map is None:
+    return None
+  if not isinstance(raw_bin_map, dict):
+    raise ValueError("bin_map must be a mapping when provided")
+
+  raw_breaks = raw_bin_map.get("breaks", [])
+  raw_labels = raw_bin_map.get("labels", [])
+  if not isinstance(raw_breaks, list):
+    raise ValueError("bin_map.breaks must be a list when provided")
+  if not isinstance(raw_labels, list):
+    raise ValueError("bin_map.labels must be a list when provided")
+
+  return BinMapSpec(
+    breaks=tuple(float(cast(Any, value)) for value in raw_breaks),
+    labels=tuple(str(value) for value in raw_labels),
+  )
+
+
 def _column_spec_to_dict(column: ColumnSpec) -> dict[str, object]:
   payload: dict[str, object] = {
     "name": column.name,
@@ -406,6 +430,10 @@ def _generation_step_to_dict(step: GenerationStep) -> dict[str, object]:
     payload["coefficient_sum"] = _coefficient_sum_to_dict(step.coefficient_sum)
   if step.response is not None:
     payload["response"] = _response_to_dict(step.response)
+  if step.feature_columns:
+    payload["feature_columns"] = list(step.feature_columns)
+  if step.bin_map is not None:
+    payload["bin_map"] = _bin_map_to_dict(step.bin_map)
   return payload
 
 
@@ -435,4 +463,11 @@ def _response_to_dict(response: BernoulliResponseSpec) -> dict[str, object]:
   return {
     "intercept": response.intercept,
     "slope": response.slope,
+  }
+
+
+def _bin_map_to_dict(bin_map: BinMapSpec) -> dict[str, object]:
+  return {
+    "breaks": list(bin_map.breaks),
+    "labels": list(bin_map.labels),
   }

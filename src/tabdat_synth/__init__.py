@@ -3,6 +3,7 @@
 from tabdat_synth.version import __version__
 from tabdat_synth.domain.contracts import (
   BernoulliResponseSpec,
+  BinMapSpec,
   CategoricalModelStepArtifact,
   ColumnSpec,
   CoefficientSumSpec,
@@ -40,6 +41,7 @@ from tabdat_synth.workflows.pipelines import (
 __all__ = [
   "__version__",
   "BernoulliResponseSpec",
+  "BinMapSpec",
   "CategoricalModelStepArtifact",
   "ColumnSpec",
   "CoefficientSumSpec",

@@ -16,6 +16,7 @@ GenerationStepKind = Literal[
   "coefficient_sum",
   "sigmoid_probability",
   "bernoulli_response",
+  "bin_map",
 ]
 BackendParamValue: TypeAlias = str | int | float | bool
 BackendScalarValue: TypeAlias = str | int | float
@@ -66,6 +67,14 @@ class BernoulliResponseSpec:
 
 
 @dataclass(frozen=True)
+class BinMapSpec:
+  """Typed deterministic binning configuration for one numeric input column."""
+
+  breaks: tuple[float, ...] = field(default_factory=tuple)
+  labels: tuple[str, ...] = field(default_factory=tuple)
+
+
+@dataclass(frozen=True)
 class ColumnSpec:
   """Declarative schema metadata for one source or generated column."""
 
@@ -103,6 +112,8 @@ class GenerationStep:
   mean_shift: float = 0.0
   coefficient_sum: CoefficientSumSpec | None = None
   response: BernoulliResponseSpec | None = None
+  feature_columns: tuple[str, ...] = field(default_factory=tuple)
+  bin_map: BinMapSpec | None = None
 
 
 @dataclass(frozen=True)

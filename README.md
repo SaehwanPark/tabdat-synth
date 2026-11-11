@@ -24,7 +24,7 @@ Real tabular data often carries privacy, governance, licensing, or access constr
 
 - Spec-driven generation from YAML configuration.
 - Directed synthesis workflows with stable topological execution.
-- Empirical, truncated-normal, categorical-model, coefficient-sum, sigmoid-probability, and Bernoulli-response steps.
+- Empirical, truncated-normal, categorical-model, bin-map, coefficient-sum, sigmoid-probability, and Bernoulli-response steps.
 - Built-in categorical backends for LightGBM and logistic regression.
 - Reusable fitted bundles for generating later without the original source file.
 - Evaluation reports for marginal quality and row-level disclosure-risk heuristics.
@@ -40,7 +40,7 @@ A synthesis run has five stages:
 4. Sample synthetic rows from the fitted artifacts.
 5. Evaluate the synthetic table against source data when appropriate.
 
-The DAG controls which generated columns are available to later steps. For categorical-model steps, declared parents define graph edges, and the fitted model receives the full incoming ancestor context in stable order.
+The DAG controls which generated columns are available to later steps. For categorical-model steps, declared parents define graph edges, and the fitted model receives the full incoming ancestor context in stable order by default, or exactly the columns named in an optional `feature_columns` tuple. Bin-map steps convert a generated numeric column into a categorical column through fixed breaks and labels, with no fitting and no random draw.
 
 ## Installation
 

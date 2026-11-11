@@ -186,7 +186,7 @@ def _fit_generation_step(
   if step.kind == "categorical_model":
     assert step.source_column is not None
     source_series = prepared_source_df[step.source_column]
-    input_columns = resolve_incoming_ancestor_outputs(spec, step)
+    input_columns = _resolve_categorical_input_columns(spec, step)
     X_source = source_generated_df.select(list(input_columns))
     model = fit_categorical_model(
       X_source,
@@ -217,6 +217,14 @@ def _fit_generation_step(
     return ConfiguredStepArtifact(step=step), _cast_output_series(
       step.output_column,
       coefficient_values,
+      column_spec,
+    )
+
+  if step.kind == "bin_map":
+    binned_values = _calculate_bin_map_series(step, source_generated_df)
+    return ConfiguredStepArtifact(step=step), _cast_output_series(
+      step.output_column,
+      binned_values,
       column_spec,
     )
 
@@ -289,6 +297,10 @@ def _execute_fitted_step(
     values = _calculate_coefficient_sum_series(step, synth_df, n_samples)
     return _cast_output_series(step.output_column, values, column_spec)
 
+  if step.kind == "bin_map":
+    values = _calculate_bin_map_series(step, synth_df)
+    return _cast_output_series(step.output_column, values, column_spec)
+
   if step.kind == "sigmoid_probability":
     values = _calculate_sigmoid_probability_series(step, synth_df)
     return _cast_output_series(step.output_column, values, column_spec)
@@ -327,6 +339,36 @@ def _calculate_sigmoid_probability_series(
   frame: pl.DataFrame,
 ) -> np.ndarray:
   return sigmoid(_input_values(step, frame))
+
+
+def _calculate_bin_map_series(
+  step: GenerationStep,
+  frame: pl.DataFrame,
+) -> np.ndarray:
+  assert step.bin_map is not None
+  assert step.input_column is not None
+  breaks = list(step.bin_map.breaks)
+  labels = list(step.bin_map.labels)
+  binned = (
+    frame.select(
+      pl.col(step.input_column)
+      .cut(breaks=breaks, labels=labels)
+      .cast(pl.String)
+      .alias(step.output_column)
+    )
+    .to_series()
+    .to_numpy()
+  )
+  return binned
+
+
+def _resolve_categorical_input_columns(
+  spec: GenerationSpec,
+  step: GenerationStep,
+) -> tuple[str, ...]:
+  if step.feature_columns:
+    return step.feature_columns
+  return resolve_incoming_ancestor_outputs(spec, step)
 
 
 def _input_values(step: GenerationStep, frame: pl.DataFrame) -> np.ndarray:

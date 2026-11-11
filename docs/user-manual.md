@@ -28,6 +28,7 @@ Main contracts:
 - `CoefficientTerm`
 - `CoefficientSumSpec`
 - `BernoulliResponseSpec`
+- `BinMapSpec`
 - `FittedSynthesizer`
 - `MetricResult`
 - `EvaluationReport`
@@ -74,7 +75,7 @@ Included examples:
 
 ## Supported Synthesis Styles
 
-The engine currently supports three user-visible synthesis styles.
+The engine currently supports four user-visible synthesis styles.
 
 ### 1. Independent Empirical Sampling
 
@@ -97,6 +98,8 @@ Important behavior:
 - fitting and generation use the full transitive incoming-path closure
 - the model therefore sees all already-generated ancestors in stable
   topological order, not only the direct parents
+- an optional `feature_columns` tuple overrides that closure and pins the model
+  inputs to exactly the listed ancestor columns, in the listed order
 - saved categorical-model artifacts expose the resolved `input_columns`
 
 Built-in backends:
@@ -104,7 +107,23 @@ Built-in backends:
 - `lightgbm`
 - `logistic_regression`
 
-### 3. Coefficient-Based Outcome Synthesis
+### 3. Deterministic Binning
+
+Use `kind: bin_map` to derive a categorical column from a generated numeric
+column through fixed cut points. This step involves no fitting and no random
+draw, so it reproduces the same labels for the same input values on every run.
+
+```yaml
+- name: agegrp
+  kind: bin_map
+  output_column: agegrp
+  input_column: age_cont
+  bin_map:
+    breaks: [54, 64, 74, 84]
+    labels: ["1", "2", "3", "4", "5"]
+```
+
+### 4. Coefficient-Based Outcome Synthesis
 
 This is the generic replacement for the old project-level VA outcome adapter.
 
@@ -224,6 +243,44 @@ Required fields:
 - `output_column`
 - `parent_columns`
 - `source_column` if it differs from `output_column`
+
+Optional field:
+
+- `feature_columns`
+
+`parent_columns` declares the graph edges. By default the fitted model trains
+on the full transitive incoming ancestor closure in stable topological order.
+Set `feature_columns` to a non-empty tuple to train and sample on exactly those
+columns in that order instead. Every column named in `feature_columns` must
+already be an ancestor output, so the tuple can only narrow the closure, never
+widen it. The resolved tuple is stored on the fitted artifact as
+`input_columns`.
+
+### `bin_map`
+
+Required fields:
+
+- `name`
+- `kind: bin_map`
+- `output_column`
+- `input_column`
+- `bin_map`
+
+`bin_map` supports:
+
+- `breaks`: strictly increasing numeric cut points
+- `labels`: one string label per resulting bin
+
+Label count must be exactly `len(breaks) + 1`. The step is deterministic: it
+applies no random draw and stores no fitted state. Bins follow the Polars `cut`
+convention, so a break is the right-inclusive upper edge of the bin below it.
+For `breaks: [54, 64, 74, 84]` with `labels: ["1", "2", "3", "4", "5"]`, an
+age of `54` maps to `"1"`, `64` to `"2"`, `74` to `"3"`, `84` to `"4"`, and
+`85` to `"5"`. The output column must be categorical.
+
+`bin_map` cannot declare `source_column`, `parent_columns`, `feature_columns`,
+`response`, or `coefficient_sum`; it depends on the graph only through
+`input_column`.
 
 ### `coefficient_sum`
 
